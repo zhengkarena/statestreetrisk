@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import Markdown from '../components/Markdown.jsx';
 import { callClaude, DEFAULT_MODEL, ClaudeError } from '../lib/claude.js';
-import { get } from '../lib/storage.js';
+import { get, set } from '../lib/storage.js';
 import { DEFAULT_CANVAS } from '../data/defaultCanvas.js';
 
 // ---------- System prompts ----------
@@ -126,6 +125,7 @@ export default function AICopilot() {
         anchor="Tab 1 canvas → Markdown design doc"
         description="Reads the current canvas and produces a formal Markdown design document with the standard 8 sections (Purpose, Scope, Stakeholders, Lifecycle, I/O, Controls, Dependencies, Risk Considerations). References SR 11-7 and Basel where relevant."
         defaultTitle="Process Design Document"
+        docType="Process Design"
         buildPrompts={() => ({
           system: SYS_DESIGN_DOC,
           user:
@@ -142,6 +142,7 @@ export default function AICopilot() {
         anchor="Tab 1 canvas → ops runbook"
         description="Step-by-step operational runbook from the canvas. Per-stage owner / frequency / steps / escalation / failure modes, plus cross-stage controls."
         defaultTitle="Operational Runbook"
+        docType="Ops Manual"
         buildPrompts={() => ({
           system: SYS_OPS_MANUAL,
           user:
@@ -158,6 +159,7 @@ export default function AICopilot() {
         anchor="Tab 1 canvas → top 5 risks"
         description="Audit-style review of the lifecycle. Top 5 bottlenecks anchored to specific stages and SLAs, each with a concrete mitigation and named owner. Cites SR 11-7 / Basel where relevant."
         defaultTitle="Bottleneck Analysis"
+        docType="Bottleneck Analysis"
         buildPrompts={() => ({
           system: SYS_BOTTLENECKS,
           user:
@@ -184,6 +186,7 @@ function UATCard() {
       anchor="Model spec → UAT table"
       description="Produces a Markdown table of UAT cases covering positive paths, boundaries, regulatory backtesting, data quality, performance/SLA, and reproducibility. Default spec is a 1-day VaR model — edit to match your model under test."
       defaultTitle="UAT Test Cases"
+      docType="UAT Cases"
       buildPrompts={() => ({
         system: SYS_UAT,
         user: 'Model specification:\n\n' + spec + '\n\nGenerate the UAT test plan table.',
@@ -214,6 +217,7 @@ function ActionCard({
   anchor,
   description,
   defaultTitle,
+  docType,
   buildPrompts,
   canRun,
   notReadyReason,
@@ -222,6 +226,7 @@ function ActionCard({
   const [status, setStatus] = useState('idle'); // idle | loading | done | error
   const [result, setResult] = useState('');
   const [error, setError] = useState('');
+  const [savedNote, setSavedNote] = useState('');
   const controllerRef = useRef(null);
 
   // Abort in-flight request on unmount.
@@ -261,8 +266,21 @@ function ActionCard({
   };
 
   const saveToDocs = () => {
-    // M5 wires this into the Docs Repo.
-    console.log('M5: Docs Repo', { title: defaultTitle, body: result });
+    if (!result) return;
+    const now = new Date().toISOString();
+    const dateStr = new Date().toLocaleDateString('en-US');
+    const doc = {
+      id: 'doc-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      title: `${defaultTitle} — ${dateStr}`,
+      type: docType || 'Manual',
+      body: result,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const docs = get('docs', []) || [];
+    set('docs', [doc, ...docs]);
+    setSavedNote('Saved to Docs Repo');
+    setTimeout(() => setSavedNote(''), 2000);
   };
 
   return (
@@ -332,10 +350,12 @@ function ActionCard({
               <button
                 onClick={saveToDocs}
                 className="px-2.5 py-1 text-xs border border-slate-300 rounded hover:bg-white"
-                title="Wired in M5 (Docs Repo) — currently logs to console."
               >
                 Save to Docs Repo
               </button>
+              {savedNote && (
+                <span className="text-xs text-emerald-700 font-medium">{savedNote}</span>
+              )}
             </div>
           </div>
           <div className="px-5 py-4">
@@ -344,78 +364,6 @@ function ActionCard({
         </>
       )}
     </section>
-  );
-}
-
-// ---------- Markdown rendering ----------
-
-const MD_COMPONENTS = {
-  h1: ({ children }) => <h1 className="text-lg font-bold text-slate-900 mt-3 mb-2">{children}</h1>,
-  h2: ({ children }) => (
-    <h2 className="text-base font-semibold text-slate-900 mt-4 mb-2 border-b border-slate-200 pb-1">
-      {children}
-    </h2>
-  ),
-  h3: ({ children }) => (
-    <h3 className="text-sm font-semibold text-slate-900 mt-3 mb-1.5">{children}</h3>
-  ),
-  h4: ({ children }) => (
-    <h4 className="text-sm font-semibold text-slate-800 mt-2 mb-1">{children}</h4>
-  ),
-  p: ({ children }) => <p className="text-sm text-slate-700 mb-2 leading-relaxed">{children}</p>,
-  ul: ({ children }) => (
-    <ul className="list-disc pl-5 mb-2 text-sm text-slate-700 space-y-0.5">{children}</ul>
-  ),
-  ol: ({ children }) => (
-    <ol className="list-decimal pl-5 mb-2 text-sm text-slate-700 space-y-0.5">{children}</ol>
-  ),
-  li: ({ children }) => <li className="leading-relaxed">{children}</li>,
-  strong: ({ children }) => <strong className="font-semibold text-slate-900">{children}</strong>,
-  em: ({ children }) => <em className="italic">{children}</em>,
-  code: ({ inline, children }) =>
-    inline ? (
-      <code className="bg-slate-100 text-slate-900 px-1 rounded text-[12px] font-mono">
-        {children}
-      </code>
-    ) : (
-      <code className="block bg-slate-100 text-slate-900 p-3 rounded text-xs font-mono overflow-x-auto mb-2">
-        {children}
-      </code>
-    ),
-  table: ({ children }) => (
-    <div className="overflow-x-auto mb-3">
-      <table className="text-xs border border-slate-200 rounded">{children}</table>
-    </div>
-  ),
-  thead: ({ children }) => <thead className="bg-slate-50">{children}</thead>,
-  th: ({ children }) => (
-    <th className="px-2.5 py-1.5 text-left border-b border-slate-200 font-semibold text-slate-800">
-      {children}
-    </th>
-  ),
-  td: ({ children }) => (
-    <td className="px-2.5 py-1.5 border-b border-slate-100 text-slate-700 align-top">
-      {children}
-    </td>
-  ),
-  blockquote: ({ children }) => (
-    <blockquote className="border-l-4 border-navy-300 pl-3 italic text-slate-600 my-2">
-      {children}
-    </blockquote>
-  ),
-  hr: () => <hr className="my-3 border-slate-200" />,
-  a: ({ href, children }) => (
-    <a href={href} target="_blank" rel="noreferrer" className="text-navy-700 underline">
-      {children}
-    </a>
-  ),
-};
-
-function Markdown({ body }) {
-  return (
-    <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>
-      {body}
-    </ReactMarkdown>
   );
 }
 
