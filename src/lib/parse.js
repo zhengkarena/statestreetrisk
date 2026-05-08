@@ -1,4 +1,8 @@
 import Papa from 'papaparse';
+// xlsx@0.18.5 has unpatched advisories on npm (prototype pollution, ReDoS).
+// Accepted: this is a local browser demo — files are user-uploaded into the
+// page only, never reach a server, so the attack surface is zero. Switching
+// to the SheetJS CDN tarball is a deferred packaging concern, not a fix.
 import * as XLSX from 'xlsx';
 
 export const REQUIRED_COLUMNS = ['symbol', 'quantity', 'price'];
