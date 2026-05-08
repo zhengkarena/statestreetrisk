@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { get, set, clearAll } from '../lib/storage.js';
+import { ping, DEFAULT_MODEL } from '../lib/claude.js';
 
 const KEY_STORAGE = 'apiKey';
 
@@ -7,12 +8,16 @@ export default function Settings({ open, onClose }) {
   const [apiKey, setApiKey] = useState('');
   const [saved, setSaved] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [testStatus, setTestStatus] = useState(null); // null | 'testing' | 'ok' | 'err'
+  const [testMessage, setTestMessage] = useState('');
 
   useEffect(() => {
     if (open) {
       setApiKey(get(KEY_STORAGE, '') || '');
       setSaved(false);
       setConfirmReset(false);
+      setTestStatus(null);
+      setTestMessage('');
     }
   }, [open]);
 
@@ -22,6 +27,21 @@ export default function Settings({ open, onClose }) {
     set(KEY_STORAGE, apiKey.trim());
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
+  };
+
+  const handleTest = async () => {
+    // Persist the current input first so the wrapper sees it.
+    set(KEY_STORAGE, apiKey.trim());
+    setTestStatus('testing');
+    setTestMessage('');
+    try {
+      await ping();
+      setTestStatus('ok');
+      setTestMessage(`Connected — ${DEFAULT_MODEL}`);
+    } catch (e) {
+      setTestStatus('err');
+      setTestMessage(e.message || 'Connection failed.');
+    }
   };
 
   const handleReset = () => {
@@ -78,20 +98,23 @@ export default function Settings({ open, onClose }) {
                 Save
               </button>
 
-              <span title="Wired up in M4 (AI Co-Pilot)">
-                <button
-                  disabled
-                  className="px-3 py-1.5 text-sm border border-slate-300 text-slate-400 rounded cursor-not-allowed"
-                >
-                  Test connection
-                </button>
-              </span>
+              <button
+                onClick={handleTest}
+                disabled={testStatus === 'testing' || !apiKey.trim()}
+                className="px-3 py-1.5 text-sm border border-slate-300 text-slate-700 rounded hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {testStatus === 'testing' ? 'Testing…' : 'Test connection'}
+              </button>
 
               {saved && <span className="text-xs text-emerald-600">Saved</span>}
             </div>
-            <p className="mt-2 text-[11px] text-slate-400 italic">
-              Test connection wired up in M4.
-            </p>
+
+            {testStatus === 'ok' && (
+              <p className="mt-2 text-xs text-emerald-700">{testMessage}</p>
+            )}
+            {testStatus === 'err' && (
+              <p className="mt-2 text-xs text-red-700 break-words">{testMessage}</p>
+            )}
           </section>
 
           <section>
