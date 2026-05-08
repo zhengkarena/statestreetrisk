@@ -22,7 +22,7 @@ verbatim reading. Phrasing is what I'd actually say; clicks are precise.
 **Pre-demo checklist**
 
 - `npm run dev` running, browser at `http://localhost:5173`, sized to ~1280px wide
-- Anthropic API key entered in Settings, **Test connection** confirmed green
+- OpenAI API key entered in Settings, **Test connection** confirmed green
 - Sample CSV (`symbol,quantity,price` header + 5–10 rows) on desktop, ready to drop into Data Hub
 - Process Canvas tab is the landing tab; localStorage clean enough that the default lifecycle and mock tasks are showing
 - README open in a second tab on GitHub for the architecture closing
@@ -136,7 +136,7 @@ Switch to the running app.
 
 ### What to say
 
-> "AI Co-Pilot. Four specific actions, no chat — the spec for each is opinionated. I'll run Generate Process Design Document. It reads the canvas from Tab 1, sends it to Claude 4.6 with a system prompt that requires anchored output — every section has to reference specific stages, owners, and SLAs from the canvas data, and where appropriate it cites SR 11-7 for governance and Basel for market-risk backtesting. While it's generating — there are four cards: design doc, ops manual, top-five bottlenecks, auto-generated UAT test cases from a free-text model spec. Here it is. Look — Section 3 names Market Data Ops as the source data provider, Section 4 references the four-week MRM validation SLA from the canvas, the Controls section cites SR 11-7. None of this is generic boilerplate; it's anchored to the lifecycle I designed in Tab 1. Click Save to Docs Repo — saved. The system prompts are the leverage; they're as much of the work as the code."
+> "AI Co-Pilot. Four specific actions, no chat — the spec for each is opinionated. I'll run Generate Process Design Document. It reads the canvas from Tab 1, sends it to OpenAI's GPT-4o-mini with a system prompt that requires anchored output — every section has to reference specific stages, owners, and SLAs from the canvas data, and where appropriate it cites SR 11-7 for governance and Basel for market-risk backtesting. While it's generating — there are four cards: design doc, ops manual, top-five bottlenecks, auto-generated UAT test cases from a free-text model spec. Here it is. Look — Section 3 names Market Data Ops as the source data provider, Section 4 references the four-week MRM validation SLA from the canvas, the Controls section cites SR 11-7. None of this is generic boilerplate; it's anchored to the lifecycle I designed in Tab 1. Click Save to Docs Repo — saved. The system prompts are the leverage; they're as much of the work as the code."
 
 ### JD anchor
 
@@ -230,7 +230,7 @@ Open `README.md` on GitHub in the second browser tab; scroll to the Mermaid diag
 
 ### What to say
 
-> "Last thing. What this looks like in production. The README has a Mermaid diagram. The frontend stays exactly what you just saw, but it becomes a thin client over a Python FastAPI layer. Source data flows through Apache Airflow DAGs from Bloomberg, Refinitiv, Databricks, S3 into Snowflake — that's the warehouse. Postgres holds the metadata: canvas, tasks, docs. Risk math runs on Celery or Ray workers reading from Snowflake — same `lib/risk.js` logic, distributed. The Anthropic key moves into Vault behind an API proxy that adds rate limiting, audit logging, and PII redaction. SSO via Entra ID for both API and UI. Every component on this diagram is something already in your stack per the JD's preferred section — Snowflake, Databricks, AWS, Python, Airflow, FastAPI."
+> "Last thing. What this looks like in production. The README has a Mermaid diagram. The frontend stays exactly what you just saw, but it becomes a thin client over a Python FastAPI layer. Source data flows through Apache Airflow DAGs from Bloomberg, Refinitiv, Databricks, S3 into Snowflake — that's the warehouse. Postgres holds the metadata: canvas, tasks, docs. Risk math runs on Celery or Ray workers reading from Snowflake — same `lib/risk.js` logic, distributed. The OpenAI key moves into Vault behind an API proxy that adds rate limiting, audit logging, and PII redaction. SSO via Entra ID for both API and UI. Every component on this diagram is something already in your stack per the JD's preferred section — Snowflake, Databricks, AWS, Python, Airflow, FastAPI."
 
 ### JD anchor
 
@@ -258,7 +258,7 @@ End of demo. Pause. Take questions.
 
 Quick recoveries if something goes wrong mid-demo. One sentence each.
 
-- **API call fails on AI Co-Pilot (Tab 4)** — Anthropic side hiccup. Skip the live generation; pivot to Tab 7 — there's a saved Process Design Document already in the Docs Repo, the output is visible. The demo doesn't depend on a fresh generation.
+- **API call fails on AI Co-Pilot (Tab 4)** — OpenAI side hiccup or CORS issue. Skip the live generation; pivot to Tab 7 — there's a saved Process Design Document already in the Docs Repo, the output is visible. The demo doesn't depend on a fresh generation.
 - **Upload error on Data Hub (Tab 3)** — Show the validation message, point out it tells the user exactly what's missing, revert to mock data; the graceful failure is itself a demo of the validation layer.
 - **Recharts doesn't render (Tab 3 or Tab 6)** — Skip the chart, talk through the values in the cards instead; the math is what matters, the chart is presentation.
 - **Tab takes too long to lazy-load** — Mention while waiting that the bundle is code-split per tab to keep initial paint at 71 KB; the spinner is the trade-off.

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { get, set, clearAll } from '../lib/storage.js';
-import { ping, DEFAULT_MODEL } from '../lib/claude.js';
+import { ping, DEFAULT_MODEL } from '../lib/ai.js';
 
 const KEY_STORAGE = 'apiKey';
 
@@ -73,21 +73,21 @@ export default function Settings({ open, onClose }) {
         <div className="flex-1 overflow-auto px-5 py-5 space-y-6">
           <section>
             <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
-              Anthropic API
+              OpenAI API
             </h3>
             <label className="block text-xs text-slate-600 mb-1">API key</label>
             <input
               type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder="sk-ant-..."
+              placeholder="sk-..."
               className="w-full px-3 py-2 border border-slate-300 rounded text-sm font-mono focus:outline-none focus:ring-2 focus:ring-navy-500 focus:border-navy-500"
               autoComplete="off"
               spellCheck={false}
             />
             <p className="mt-1 text-[11px] text-slate-500">
               Stored in localStorage on this machine. Used only for direct calls to
-              api.anthropic.com.
+              api.openai.com.
             </p>
 
             <div className="mt-3 flex items-center gap-2">

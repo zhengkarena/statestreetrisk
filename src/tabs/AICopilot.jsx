@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Markdown from '../components/Markdown.jsx';
-import { callClaude, DEFAULT_MODEL, ClaudeError } from '../lib/claude.js';
+import { callAI, DEFAULT_MODEL, AIError } from '../lib/ai.js';
 import { get, set } from '../lib/storage.js';
 import { DEFAULT_CANVAS } from '../data/defaultCanvas.js';
 
@@ -114,9 +114,9 @@ export default function AICopilot() {
       <header className="bg-white border border-slate-200 rounded-lg px-5 py-4">
         <h2 className="text-sm font-semibold text-slate-900">AI Co-Pilot</h2>
         <p className="text-xs text-slate-500 mt-0.5">
-          Specific, opinionated automations powered by Claude. All actions read live data from
+          Specific, opinionated automations powered by OpenAI. All actions read live data from
           your workspace; outputs are anchored to the actual lifecycle and spec, not generic.
-          Direct calls to api.anthropic.com — your key is sent only to Anthropic.
+          Direct calls to api.openai.com — your key is sent only to OpenAI.
         </p>
       </header>
 
@@ -243,11 +243,11 @@ function ActionCard({
     setError('');
     try {
       const { system, user } = buildPrompts();
-      const text = await callClaude({ system, user, signal: ctrl.signal });
+      const text = await callAI({ system, user, signal: ctrl.signal });
       setResult(text);
       setStatus('done');
     } catch (e) {
-      if (e instanceof ClaudeError && e.code === 'aborted') {
+      if (e instanceof AIError && e.code === 'aborted') {
         setStatus('idle');
         return;
       }
