@@ -3,7 +3,9 @@ import Papa from 'papaparse';
 // Accepted: this is a local browser demo — files are user-uploaded into the
 // page only, never reach a server, so the attack surface is zero. Switching
 // to the SheetJS CDN tarball is a deferred packaging concern, not a fix.
-import * as XLSX from 'xlsx';
+//
+// Imported dynamically inside parseExcel so users uploading CSV (or never
+// uploading at all) don't pay the ~370 KB cost.
 
 export const REQUIRED_COLUMNS = ['symbol', 'quantity', 'price'];
 
@@ -43,7 +45,8 @@ function parseCSV(file) {
 
 async function parseExcel(file) {
   try {
-    const buf = await file.arrayBuffer();
+    const [buf, xlsxMod] = await Promise.all([file.arrayBuffer(), import('xlsx')]);
+    const XLSX = xlsxMod.default ?? xlsxMod;
     const wb = XLSX.read(buf, { type: 'array' });
     const sheetName = wb.SheetNames[0];
     if (!sheetName) return { rows: [], columns: [], error: 'Workbook has no sheets.' };
