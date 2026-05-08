@@ -11,4 +11,17 @@
   body {
     @apply font-sans bg-slate-50 text-slate-900 antialiased;
   }
+
+  /* Keyboard-only focus indicator. Doesn't fire on mouse click, so it
+     stays out of the way during normal use but makes Tab navigation
+     visible. Color tuned to navy-800 for light surfaces. */
+  :focus-visible {
+    outline: 2px solid #1e3a5f;
+    outline-offset: 2px;
+  }
+
+  /* Lighter ring on the dark sidebar so focus is visible against navy-900. */
+  aside.bg-navy-900 :focus-visible {
+    outline-color: #c2d1e3;
+  }
 }

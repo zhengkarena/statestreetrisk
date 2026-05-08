@@ -122,8 +122,8 @@ export default function ProductionMonitor() {
 
       <section>
         <SectionHeader
-          title="Backtest — Rolling 250 Days"
-          subtitle="Realized P&L vs VaR(99). Exceptions marked where realized loss breaches the VaR line."
+          title="Equity & Options Portfolio Backtest"
+          subtitle="VaR(99) vs realized P&L over the rolling 250-day window. Per-model exception counts in the tiles above are tracked independently — this chart is the portfolio-level series."
         />
         <BacktestChart series={series} />
         <div className="mt-2 flex items-center gap-3 text-xs">

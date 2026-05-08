@@ -37,7 +37,9 @@ export default function DataHub() {
       return;
     }
     if (!rows.length) {
-      setParseError('File is empty or has no data rows.');
+      setParseError(
+        'File parsed but no data rows were found. Check that the first row contains column headers and at least one row of data follows.',
+      );
       setBusy(false);
       return;
     }
